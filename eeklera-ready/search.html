@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<meta name="theme-color content="width=device-width, initial-scale=1, maximum-scale=5" />
+<title>Поиск — EEKLERA Wiki</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-screen-label="14 Search">
+<main class="layout">
+  <div data-sidenav></div>
+  <section class="main">
+    <div class="crumb"><a href="index.html">EEKLERA</a><span class="sep">/</span><span>Поиск</span></div>
+    <div class="kicker">14 · Search</div>
+    <h1 class="page-title">Поиск</h1>
+    <input type="text" id="q" class="search-big" placeholder="Поиск: проект, год, дата, площадка, человек..." autocomplete="off" />
+    <div id="hits" style="margin-top:32px"></div>
+  </section>
+</main>
+<script src="data.js"></script>
+<script>
+function go(){
+  const q = document.getElementById("q").value.trim();
+  const hits = document.getElementById("hits");
+  if(!q){ hits.innerHTML = `<p style="color:var(--paper-dim)">Введите запрос — поиск идёт по фильмографии, релизам и событиям.</p>`; return; }
+  const r = window.EEKChrome.search(q);
+  if(!r.length){ hits.innerHTML = `<div class="note">Ничего не найдено по запросу «${q}».</div>`; return; }
+  hits.innerHTML = `<div class="kicker">${r.length} результат(ов) по «${q}»</div>` + r.map(x=>`
+    <a class="search-row" href="${x.url}">
+      <div class="cat mono">${x.cat}</div>
+      <div class="row-body"><div class="ttl">${x.title}</div><div class="sub">${x.sub}</div></div>
+      ${window.EEKChrome.statusPill(x.status||"confirmed")}
+    </a>`).join("");
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  const u = new URLSearchParams(location.search);
+  const q = u.get("q");
+  if(q){ document.getElementById("q").value = q; go(); }
+  document.getElementById("q").addEventListener("input", go);
+  document.getElementById("q").focus();
+});
+</script>
+<script src="mobile-nav.js"></script>
+</body>
+</html>

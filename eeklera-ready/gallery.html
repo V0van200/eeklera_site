@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+<meta name="theme-color content="width=device-width, initial-scale=1, maximum-scale=5" />
+<title>Галерея — EEKLERA Wiki</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .gal-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
+  @media (max-width: 980px){ .gal-grid { grid-template-columns: repeat(2, 1fr); } }
+  .gal-grid .cell { position: relative; overflow: hidden; background: #111; cursor: pointer; aspect-ratio: 3/4; }
+  .gal-grid .cell img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease, filter .3s ease; filter: saturate(0.95) contrast(1.02); }
+  .gal-grid .cell:hover img { transform: scale(1.04); filter: saturate(1.1) contrast(1.05); }
+  .gal-grid .cell::after { content: attr(data-cap); position: absolute; left: 8px; bottom: 8px; font-family: var(--mono); font-size: 11px; color: #fff; opacity: 0; transition: opacity .25s; letter-spacing: .05em; }
+  .gal-grid .cell:hover::after { opacity: .85; }
+  .lightbox { position: fixed; inset:0; background: rgba(8,8,8,.96); display:none; align-items:center; justify-content:center; z-index: 100; padding: 24px; }
+  .lightbox.show { display:flex; }
+  .lightbox img { max-width: 92vw; max-height: 88vh; object-fit: contain; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .lightbox .lb-close { position:absolute; top:16px; right:24px; color:#fff; font-family:var(--mono); font-size:13px; cursor:pointer; letter-spacing:.1em; }
+  .lightbox .lb-meta { position:absolute; bottom:18px; left:24px; color:#aaa; font-family:var(--mono); font-size:11px; letter-spacing:.1em; }
+  .lightbox .lb-nav { position:absolute; top:50%; transform:translateY(-50%); color:#fff; font-size:32px; padding: 12px 18px; cursor: pointer; user-select:none; opacity:.6; }
+  .lightbox .lb-nav:hover { opacity:1; }
+  .lightbox .lb-prev { left: 12px; }
+  .lightbox .lb-next { right: 12px; }
+</style>
+</head>
+<body data-screen-label="12 Gallery">
+<main class="layout">
+  <div data-sidenav></div>
+  <section class="main">
+    <div class="crumb"><a href="index.html">EEKLERA</a><span class="sep">/</span><span>Галерея</span></div>
+    <div class="kicker">12 · Gallery · фотоархив</div>
+    <h1 class="page-title">Фотоархив<br><em style="color:var(--accent-2);font-style:italic">EEKLERA</em></h1>
+    <p class="lede">Студийные кадры, beauty-портреты, fashion-съёмки. Из открытых источников и материалов, переданных непосредственно.</p>
+
+    <div class="filters" style="margin-top:24px">
+      <div class="filter-group">
+        <span class="lbl">Сет</span>
+        <button class="filter-btn active" data-set="all">Все</button>
+        <button class="filter-btn" data-set="studio">Studio</button>
+        <button class="filter-btn" data-set="beauty">Beauty</button>
+        <button class="filter-btn" data-set="fashion">Fashion</button>
+        <button class="filter-btn" data-set="portrait">Portrait</button>
+      </div>
+    </div>
+
+    <div class="gal-grid" id="gal"></div>
+
+    <div class="note" style="margin-top:32px">Авторские права на фотоматериалы остаются за фотографами и Валерией Колягиной. Сайт — fan-wiki, материалы используются для информационного представления карьеры.</div>
+  </section>
+</main>
+
+<div class="lightbox" id="lb">
+  <span class="lb-close" onclick="closeLB()">CLOSE ✕</span>
+  <span class="lb-nav lb-prev" onclick="navLB(-1)">‹</span>
+  <span class="lb-nav lb-next" onclick="navLB(1)">›</span>
+  <img id="lb-img" src="" alt="">
+  <div class="lb-meta" id="lb-meta"></div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const photos = [
+  {src:"assets/photo-01.jpg", set:"fashion", cap:"white dress · studio"},
+  {src:"assets/photo-02.jpg", set:"studio", cap:"black corset · stool"},
+  {src:"assets/photo-03.jpg", set:"portrait", cap:"actor headshot · 01"},
+  {src:"assets/photo-04.jpg", set:"portrait", cap:"actor headshot · 02"},
+  {src:"assets/photo-05.jpg", set:"fashion", cap:"chair pose · lace"},
+  {src:"assets/photo-06.jpg", set:"fashion", cap:"chair pose · soft"},
+  {src:"assets/photo-07.jpg", set:"studio", cap:"fan studio · denim"},
+  {src:"assets/photo-08.jpg", set:"fashion", cap:"hood · slit skirt"},
+  {src:"assets/photo-09.jpg", set:"studio", cap:"corset · beanie"},
+  {src:"assets/photo-10.jpg", set:"studio", cap:"beanie · fan kneel"},
+  {src:"assets/photo-11.jpg", set:"studio", cap:"beanie · close"},
+  {src:"assets/photo-12.jpg", set:"beauty", cap:"beauty · jewels"},
+];
+
+let cur = 0; let visible = photos.slice();
+
+function render(){
+  const f = document.querySelector("[data-set].active").dataset.set;
+  visible = photos.filter(p => f === "all" || p.set === f);
+  document.getElementById("gal").innerHTML = visible.map((p,i)=>`
+    <div class="cell" data-cap="${p.cap}" onclick="openLB(${i})">
+      <img src="${p.src}" alt="${p.cap}" loading="lazy">
+    </div>`).join("");
+}
+function openLB(i){
+  cur = i;
+  document.getElementById("lb-img").src = visible[i].src;
+  document.getElementById("lb-meta").textContent = visible[i].cap + " · " + (i+1) + "/" + visible.length;
+  document.getElementById("lb").classList.add("show");
+}
+function navLB(d){
+  cur = (cur + d + visible.length) % visible.length;
+  document.getElementById("lb-img").src = visible[cur].src;
+  document.getElementById("lb-meta").textContent = visible[cur].cap + " · " + (cur+1) + "/" + visible.length;
+}
+function closeLB(){ document.getElementById("lb").classList.remove("show"); }
+document.addEventListener("DOMContentLoaded", render);
+document.querySelectorAll("[data-set]").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("[data-set]").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); render();
+}));
+document.addEventListener("keydown",e=>{
+  if(!document.getElementById("lb").classList.contains("show")) return;
+  if(e.key==="Escape") closeLB();
+  if(e.key==="ArrowRight") navLB(1);
+  if(e.key==="ArrowLeft") navLB(-1);
+});
+</script>
+<script src="mobile-nav.js"></script>
+</body>
+</html>
